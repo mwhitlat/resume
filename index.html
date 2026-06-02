@@ -263,7 +263,6 @@ let lastInteract = Date.now();
 let nextAutoTime = 0;
 const IDLE_MS = 6000;
 const pops = [];           // discovery burst effects
-const confetti = [];       // finish-moment particles
 
 // ── Audio (synthesized, muted by default) ────────────────────
 let actx = null, soundOn = false, pad = null, bus = null;
@@ -588,42 +587,14 @@ function draw() {
   cx.beginPath(); cx.arc(ppx, ppy - bob, 30, 0, Math.PI*2); cx.fillStyle = gx; cx.fill();
   cx.beginPath(); cx.arc(ppx, ppy - bob, 13, 0, Math.PI*2);
   cx.fillStyle = '#fff'; cx.fill();
-
-  // confetti (screen-space, on top)
-  confetti.forEach(p => {
-    cx.save();
-    cx.translate(p.x, p.y); cx.rotate(p.rot);
-    cx.fillStyle = p.c;
-    cx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r * 1.6);
-    cx.restore();
-  });
 }
 
 function dist(ax, ay, bx, by) { return Math.hypot(ax - bx, ay - by); }
-
-function spawnConfetti() {
-  const cols = ['#c8102e', '#8e8e93', '#FF3008', '#ffffff', '#ffd23f'];
-  for (let i = 0; i < 90; i++) {
-    confetti.push({
-      x: W * (0.2 + Math.random() * 0.6), y: -20 - Math.random() * 80,
-      vx: (Math.random() - 0.5) * 6, vy: Math.random() * 2 + 1,
-      r: 3 + Math.random() * 5, c: cols[(Math.random() * cols.length) | 0],
-      rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.4,
-    });
-  }
-}
 
 // ── Update ────────────────────────────────────────────────────
 function update() {
   frame++;
   const wh = WORLD_H();
-
-  // confetti keeps animating even when the overlay is up
-  for (let i = confetti.length - 1; i >= 0; i--) {
-    const p = confetti[i];
-    p.vy += 0.16; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
-    if (p.y > H + 30) confetti.splice(i, 1);
-  }
 
   // freeze the world while the contact overlay is open — no autoplay behind it
   if (endEl.classList.contains('on')) return;
@@ -689,10 +660,8 @@ function update() {
   if (found >= SPOTS.length && !ended) {
     ended = true;
     sFinish();
-    spawnConfetti();
     const cntEl = document.getElementById('cnt');
     cntEl.classList.remove('bump'); void cntEl.offsetWidth; cntEl.classList.add('bump');
-    setTimeout(() => spawnConfetti(), 350);
     setTimeout(() => document.getElementById('end').classList.add('on'), 1100);
   }
 }
